@@ -56,7 +56,7 @@ NEARDATA long done_money = 0;
 #endif
 char killer_buf[BUFSZ] = DUMMY;
 const char *nomovemsg = 0;
-const char nul[40] = DUMMY;			/* contains zeros */
+const char nul[64] = DUMMY;			/* contains zeros; >= sizeof(struct fruit) (48 on 64-bit, save.c) */
 NEARDATA char plname[PL_NSIZ] = DUMMY;		/* player name */
 NEARDATA char pl_character[PL_CSIZ] = DUMMY;
 NEARDATA char pl_race = '\0';
