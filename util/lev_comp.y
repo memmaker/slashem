@@ -597,7 +597,7 @@ room_door	: DOOR_ID ':' secret ',' door_state ',' door_wall ',' door_pos
 			/* ERR means random here */
 			if ($7 == ERR && $9 != ERR) {
 		     yyerror("If the door wall is random, so must be its pos!");
-			    tmprdoor[ndoor] = (struct room_door *)0;
+			    tmprdoor[ndoor] = (room_door *)0;
 			} else {
 			    tmprdoor[ndoor] = New(room_door);
 			    tmprdoor[ndoor]->secret = $3;
