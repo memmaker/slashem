@@ -50,7 +50,12 @@
  * Define all of those you want supported in your binary.
  * Some combinations make no sense.  See the installation document.
  */
+#ifdef __EMSCRIPTEN__
+# define WEB_GRAPHICS		/* RVIP: browser port, win/web/winweb.c */
+# define DEFAULT_WINDOW_SYS "web"
+#else
 #define TTY_GRAPHICS		/* good old tty based graphics */
+#endif
 /* #define X11_GRAPHICS */	/* X11 interface */
 /* #define QT_GRAPHICS */	/* Qt Interface */
 /* #define KDE */		/* KDE Interface */
@@ -228,7 +233,7 @@
  *	compression.
  */
 
-#ifdef UNIX
+#if defined(UNIX) && !defined(__EMSCRIPTEN__)	/* RVIP: no fork/exec in wasm */
 /* path and file name extension for compression program */
 # define COMPRESS "/usr/bin/compress" /* Lempel-Ziv compression */
 # define COMPRESS_EXTENSION ".Z"	     /* compress's extension */

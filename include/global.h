@@ -324,7 +324,7 @@ typedef xchar	boolean;		/* 0 or 1 */
 #  define USE_TILES
 # endif
 #endif
-#if defined(GL_GRAPHICS) || defined(SDL_GRAPHICS)
+#if defined(GL_GRAPHICS) || defined(SDL_GRAPHICS) || defined(WEB_GRAPHICS)
 # ifndef USE_TILES
 #  define USE_TILES
 # endif

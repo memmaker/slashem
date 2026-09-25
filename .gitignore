@@ -41,3 +41,6 @@
 /playground/
 /web/dist/
 /web/seed/
+/src/tile.c
+/include/tile.h
+/web/tools/

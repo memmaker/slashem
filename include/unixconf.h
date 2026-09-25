@@ -153,11 +153,15 @@
  */
 
 /* #define NO_FILE_LINKS */	/* if no hard links */
+#ifdef __EMSCRIPTEN__
+# define NO_FILE_LINKS		/* RVIP: MEMFS has no link() */
+# define LOCKDIR "/slashem"
+#endif
 
 #ifdef NO_FILE_LINKS
 # ifdef FILE_AREAS
 # define LOCKDIR FILE_AREA_VAR			/* where to put locks */
-# else
+# elif !defined(LOCKDIR)
 # define LOCKDIR "/usr/games/lib/nethackdir"	/* where to put locks */
 # endif
 #endif
