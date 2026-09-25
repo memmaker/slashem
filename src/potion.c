@@ -2177,7 +2177,8 @@ register struct obj *obj;
  * returns -1 if object exploded (potion should be used up) 
  */
 {
-	int chg, otyp = obj->otyp, otyp2;
+	int chg, otyp = obj->otyp;
+	short otyp2;			/* artifact_name() takes short * */
 	xchar ox, oy;
 	long owornmask;
 	struct obj *otmp;
