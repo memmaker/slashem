@@ -2656,6 +2656,16 @@ register char *cmd;
 		flags.nopick = 0;
 		cmd = parse();
 	}
+#ifdef WEB_GRAPHICS
+	if (*cmd == '\r') {	/* RVIP: Enter = menu of all commands */
+		extern void NDECL(web_cmdmenu);
+
+		web_cmdmenu();
+		flags.move = FALSE;
+		multi = 0;
+		return;
+	}
+#endif
 	if (*cmd == '\033') { /* <esc> key - user might be panicking */
 		/* Bring up the menu */
 		if (multi || !flags.menu_on_esc || !(domenusystem())) {

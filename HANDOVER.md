@@ -114,3 +114,47 @@
   interrupt longer walks. No autosave yet (stage 1 note).
 - Next: stage 3 (Enter menu + inventory item menus) in `win/web/winweb.c`,
   building on SLASH'EM's own Enter = Main Menu.
+
+### Stage 3 (Enter menu + inventory) — done 2026-09-26
+- Note: SLASH'EM's own "Main Menu" is on Esc/`` ` `` (`domenusystem`), not
+  Enter; web Enter (13) was an unknown command. Now `rhack()` (`src/cmd.c`,
+  `#ifdef WEB_GRAPHICS`) sends `'\r'` to `web_cmdmenu()` and nothing else.
+- **Enter menu:** `web_cmdmenu()` in `win/web/winweb.c` reads `dat/hh`
+  (`NH_SHELP`) at run time: "General commands" + "Game commands" lines with
+  one key (`x` or `^X`) become rows (key = `gch`, hh line as text), then every
+  `extcmdlist` entry as `#name`. The choice is **queued as keys** (`kq[]`,
+  read first by `getkey()`), so prefixes (F, m, n) and prompts work as typed;
+  extended commands queue `#name\n`. Meta (`M-`) lines are not parsed (all
+  reachable as `#name`). New hh lines appear automatically.
+- `web_select_menu`: accelerator check also matches `gch`; `mitem.ch/gch`
+  are `unsigned char` now (M- keys = 0x80|c).
+- **Inventory `i`:** `ddoinv()` in `src/invent.c` = `display_inventory(0,
+  TRUE)` (PICK_ONE, cursor). `rvip_invlist` makes `web_select_menu` set
+  `rvip_pick`: letter 'm' main, Ctrl+letter 'x' examine (not for h/i/j/m:
+  Ctrl = BS/Tab/LF/CR), `+` 'm', `-` 'd', `*` 'x', Enter/Space/5/click 0 =
+  action menu `rvip_menu()` (main action first; keys e q r z a W T P R w Q t
+  E d `*`, M-d/M-r/M-i by cursor). Table `rvip_ia[]`, `rvip_fits()`,
+  `rvip_main()`. **Actions are direct calls** (`doeat`, `dodrink`, …) with
+  `rvip_obj` set; `getobj()` returns it once without asking. Examine = pline
+  `doname` + `checkfile(xname)` (encyclopedia; `checkfile` made non-static in
+  `pager.c`).
+- Reopen: `rvip_reopen` set after any action; `rvip_continue()` (hack.c)
+  calls `ddoinv()` next idle turn unless `rvip_hostile_in_view()`.
+- Shift+letter drop not done: A–Z are item letters. `-` drops instead.
+- Item prompts: `getobj()` (WEB_GRAPHICS) opens the list at once (title =
+  the question, `rvip_prompt`) unless `-`, `,` or `.` are valid answers
+  (wield, engrave, …): there the letter prompt stays and Enter opens it.
+  One candidate → full list (`*`), since `?` with one item only plines.
+- 3d: no `--More--` anywhere; two births (Cavewoman, Tourist) had no stops.
+- Help: `dat/hh` (Enter line, `i` key block), `dat/cmdhelp` (`^M`, `i`),
+  copied to `playground/`.
+- Tested (browser pane, local server): Enter menu lists General/Game/extended;
+  8/2 + Esc; `~` from menu explored; `i` from menu; cursor + Enter → sling
+  menu → `w` wielded, list reopened; `f` quaffed; `-` dropped; Ctrl+d
+  examined (encyclopedia); `+` wielded; `0` closed; `d` prompt list; `w`
+  prompt + Enter list; `e` → "What do you want to eat?" list → ate; `i` read
+  magic mapping, reopened; row click (mousedown) ran `^X` and `#quit`;
+  save/restore; no console errors. Test DB `/slashem` deleted.
+- Open: Enter menu has no movement rows (hh "Move commands" block skipped);
+  item prompts with `-`/`,`/`.` still start as a letter prompt.
+- Next: stage 4 (tiles).

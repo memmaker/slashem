@@ -948,6 +948,9 @@ struct obj *obj;
 !!!! may be able to remove "usegold"
 #endif
  */
+struct obj *rvip_obj;	/* RVIP: getobj() returns it once ('i' list) */
+static const char *rvip_prompt;	/* getobj()'s question, as the list title */
+
 struct obj *
 getobj(let,word)
 register const char *let,*word;
@@ -973,6 +976,7 @@ register const char *let,*word;
 	long cnt;
 	boolean prezero = FALSE;
 	long dummymask;
+	int rvip_asked = 0;
 	int ugly;
 	struct obj *floorchain;
 	int floorfollow;
@@ -1105,6 +1109,11 @@ register const char *let,*word;
 		return((struct obj *)0);
 	}
 	
+	if (rvip_obj) {		/* RVIP: chosen in the 'i' list */
+		otmp = rvip_obj;
+		rvip_obj = 0;
+		return otmp;
+	}
 	for(;;) {
 		cnt = 0;
 		if (allowcnt == 2) allowcnt = 1;  /* abort previous count */
@@ -1127,12 +1136,24 @@ register const char *let,*word;
 		}
 		*bp++ = ']';
 		*bp = '\0';
+#ifdef WEB_GRAPHICS
+		/* RVIP: open the list at once unless '-' ',' '.' are answers */
+		if (!rvip_asked++ && !allownone && !allowfloor
+		    && !allowthisplace && !in_doagain)
+		    ilet = strlen(lets) > 1 ? '?' : '*'; /* 1: '?' only plines */
+		else
+#endif
 #ifdef REDO
 		if (in_doagain)
 		    ilet = readchar();
 		else
 #endif
 		    ilet = yn_function(qbuf, (char *)0, '\0');
+#ifdef WEB_GRAPHICS
+		/* RVIP: Enter at an item prompt = the list with a cursor */
+		if (ilet == '\r' || ilet == '\n')
+		    ilet = strlen(lets) > 1 ? '?' : '*';
+#endif
 		if(ilet == '0') prezero = TRUE;
 		while(digit(ilet) && allowcnt) {
 #ifdef REDO
@@ -1231,8 +1252,11 @@ register const char *let,*word;
 
 		    if (ilet == '?' && !*lets && *altlets)
 			allowed_choices = altlets;
+		    Sprintf(qbuf, "What do you want to %s?", word);
+		    rvip_prompt = qbuf;
 		    ilet = display_pickinv(allowed_choices, TRUE,
 					   allowcnt ? &ctmp : (long *)0);
+		    rvip_prompt = 0;
 		    if(!ilet) continue;
 		    if (allowcnt && ctmp >= 0) {
 			cnt = ctmp;
@@ -1870,12 +1894,146 @@ long quan;		/* if non-0, print this quantity, not obj->quan */
 #endif /* OVL1 */
 #ifdef OVLB
 
+/* RVIP 3c: 'i' = inventory with a cursor.  Letter = the item's main
+   action, Enter = menu of every action that fits (each with its usual key),
+   '-' drop, '*' / Ctrl+letter examine (win/web/winweb.c sets rvip_pick).
+   Actions call the command directly; getobj() hands it rvip_obj. */
+
+static const struct rvip_ia {
+	int key;
+	const char *name;
+	int NDECL((*fn));
+} rvip_ia[] = {
+	{'e', "eat", doeat}, {'q', "quaff", dodrink}, {'r', "read", doread},
+	{'z', "zap", dozap}, {'a', "apply", doapply}, {'W', "wear", dowear},
+	{'T', "take off", dotakeoff}, {'P', "put on", doputon},
+	{'R', "remove", doremring}, {'w', "wield", dowield},
+	{'Q', "quiver", dowieldquiver}, {'t', "throw", dothrow},
+	{'E', "engrave with", doengrave}, {0x80|'d', "dip", dodip},
+	{0x80|'r', "rub", dorub}, {0x80|'i', "invoke", doinvoke},
+	{'d', "drop", dodrop}, {'*', "examine", 0}, {0, 0, 0}
+};
+
+STATIC_OVL boolean
+rvip_fits(obj, k)
+struct obj *obj;
+int k;
+{
+	int oc = obj->oclass;
+	long worn = obj->owornmask & (W_ARMOR | W_RING | W_AMUL | W_TOOL);
+
+	switch (k) {
+	case 'e': return (boolean) (oc == FOOD_CLASS);
+	case 'q': return (boolean) (oc == POTION_CLASS);
+	case 'r': return (boolean) (oc == SCROLL_CLASS || oc == SPBOOK_CLASS);
+	case 'z': return (boolean) (oc == WAND_CLASS);
+	case 'a': return (boolean) (oc == TOOL_CLASS || oc == WAND_CLASS
+				    || obj->otyp == POT_OIL);
+	case 'W': return (boolean) (oc == ARMOR_CLASS && !worn);
+	case 'T': return (boolean) (oc == ARMOR_CLASS && worn);
+	case 'P': return (boolean) ((oc == RING_CLASS || oc == AMULET_CLASS
+		|| obj->otyp == BLINDFOLD || obj->otyp == TOWEL
+		|| obj->otyp == LENSES) && !worn);
+	case 'R': return (boolean) (worn && oc != ARMOR_CLASS);
+	case 'w': return (boolean) (obj != uwep && !worn);
+	case 'Q': return (boolean) (obj != uquiver && !worn
+				    && (oc == WEAPON_CLASS || oc == GEM_CLASS));
+	case 't': return (boolean) !worn;
+	case 'E': return (boolean) (oc == WAND_CLASS || oc == WEAPON_CLASS
+				    || oc == GEM_CLASS || oc == RING_CLASS);
+	case 0x80|'r': return (boolean) (oc == TOOL_CLASS || is_graystone(obj));
+	case 0x80|'i': return (boolean) (obj->oartifact != 0);
+	}
+	return TRUE;	/* dip, drop, examine */
+}
+
+STATIC_OVL int
+rvip_main(obj)
+struct obj *obj;
+{
+	boolean worn = (obj->owornmask & (W_ARMOR | W_RING | W_AMUL | W_TOOL)) != 0;
+
+	switch (obj->oclass) {
+	case FOOD_CLASS: return 'e';
+	case POTION_CLASS: return 'q';
+	case SCROLL_CLASS: case SPBOOK_CLASS: return 'r';
+	case WAND_CLASS: return 'z';
+	case TOOL_CLASS: return 'a';
+	case ARMOR_CLASS: return worn ? 'T' : 'W';
+	case RING_CLASS: case AMULET_CLASS: return worn ? 'R' : 'P';
+	case WEAPON_CLASS: if (obj != uwep) return 'w';
+	}
+	return '*';
+}
+
+/* the item's action menu; returns the chosen key or 0 */
+STATIC_OVL int
+rvip_menu(obj)
+struct obj *obj;
+{
+	const struct rvip_ia *a;
+	winid win = create_nhwindow(NHW_MENU);
+	anything any;
+	menu_item *sel;
+	char buf[BUFSZ];
+	int k = 0, m = rvip_main(obj), pass;
+
+	start_menu(win);
+	for (pass = 0; pass < 2; pass++)	/* main action first */
+	    for (a = rvip_ia; a->key; a++) {
+		if ((pass == 0) != (a->key == m) || !rvip_fits(obj, a->key))
+		    continue;
+		if (a->key & 0x80)
+		    Sprintf(buf, "%s (M-%c, #%s)", a->name, a->key & 0x7f,
+			    a->name);
+		else
+		    Strcpy(buf, a->name);
+		any.a_int = a->key;
+		add_menu(win, NO_GLYPH, &any, (a->key & 0x80) ? 0 : a->key,
+			 a->key, ATR_NONE, buf, MENU_UNSELECTED);
+	    }
+	end_menu(win, doname(obj));
+	if (select_menu(win, PICK_ONE, &sel) > 0) {
+	    k = sel[0].item.a_int;
+	    free((genericptr_t) sel);
+	}
+	destroy_nhwindow(win);
+	return k;
+}
+
 /* the 'i' command */
 int
 ddoinv()
 {
-	(void) display_inventory((char *)0, FALSE);
-	return 0;
+	struct obj *obj;
+	const struct rvip_ia *a;
+	char c;
+	int k, res;
+
+	rvip_invlist = TRUE;
+	rvip_pick = 0;
+	c = display_inventory((char *)0, TRUE);
+	rvip_invlist = FALSE;
+	for (obj = invent; obj && obj->invlet != c; obj = obj->nobj)
+	    ;
+	if (!c || c == '\033' || !obj)
+	    return 0;
+	k = rvip_pick == 'd' ? 'd' : rvip_pick == 'x' ? '*'
+	    : rvip_pick ? rvip_main(obj) : rvip_menu(obj);
+	if (!k)
+	    return 0;
+	rvip_reopen = TRUE;	/* rvip_continue() (hack.c) reopens the list */
+	if (k == '*') {
+	    pline("%s", doname(obj));
+	    checkfile(xname(obj), (struct permonst *)0, FALSE, TRUE);
+	    return 0;
+	}
+	for (a = rvip_ia; a->key != k; a++)
+	    ;
+	rvip_obj = obj;
+	res = (*a->fn)();
+	rvip_obj = 0;
+	return res;
 }
 
 /*
@@ -2022,7 +2180,7 @@ nextclass:
 		}
 #endif
 	}
-	end_menu(win, (char *) 0);
+	end_menu(win, rvip_prompt);
 
 	n = select_menu(win, want_reply ? PICK_ONE : PICK_NONE, &selected);
 	if (n > 0) {

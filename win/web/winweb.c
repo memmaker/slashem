@@ -31,7 +31,7 @@ EM_ASYNC_JS(void, js_end, (void), { await Module.nh.end(); });
 struct line { char *s; int attr, clr; };
 struct mitem {
     anything id;
-    char ch, gch;
+    unsigned char ch, gch; /* unsigned: M- keys arrive as 0x80|c */
     int attr, clr, tile;
     char *s;
     boolean sel;
@@ -53,6 +53,7 @@ static char *hist[HIST_MAX];
 static char hist_prev[BUFSZ];
 static int hist_reps, nhist;
 static int mouse_x, mouse_y, mouse_btn;
+static char kq[BUFSZ]; /* RVIP: keys queued by the Enter menu (web_cmdmenu) */
 static char promptbuf[BUFSZ * 2]; /* active prompt line (yn/getlin) */
 static struct mitem *perm;        /* persistent inventory copy */
 static int nperm;
@@ -192,6 +193,12 @@ getkey(boolean want_mouse)
     redraw();
     for (;;) {
         boolean np = iflags.num_pad;
+
+        if (*kq) {
+            k = (unsigned char) kq[0];
+            memmove(kq, kq + 1, strlen(kq));
+            return k;
+        }
 
         /* at the command prompt: nh_poskey (mouse allowed), no pop-up/prompt */
         if ((k = js_key(0, want_mouse && popup < 0 && !*promptbuf)) < 0) {
@@ -807,7 +814,12 @@ web_select_menu(winid w, int how, menu_item **sel)
                 pop_top = pop_cur - rows + 1;
         }
         k = getkey(FALSE);
-        for (i = 0; i < p->nitems && p->items[i].ch != k; i++)
+        rvip_pick = 'm'; /* 'i' list: letter = main action (invent.c) */
+        if (rvip_invlist && how == PICK_ONE && k >= 1 && k <= 26
+            && !index("\b\t\n\r", k))
+            rvip_pick = 'x', k += 'a' - 1; /* Ctrl+letter examines */
+        for (i = 0; i < p->nitems && p->items[i].ch != k
+                    && !(p->items[i].gch == k && p->items[i].id.a_void); i++)
             ;
         if (i < p->nitems) /* a real accelerator wins over numpad keys */
             ;
@@ -818,6 +830,14 @@ web_select_menu(winid w, int how, menu_item **sel)
         if (k == '\033') {
             popup = -1;
             return -1;
+        }
+        if (i == p->nitems) { /* Enter/Space/click: 0 = the action menu */
+            rvip_pick = 0;
+            if (rvip_invlist && how == PICK_ONE && pop_cur >= 0
+                && (k == '+' || k == '-' || k == '*')) {
+                rvip_pick = k == '+' ? 'm' : k == '-' ? 'd' : 'x';
+                k = '\n';
+            }
         }
         if (how == PICK_NONE) {
             if ((k == ' ' || k == '>') && pop_top + rows < p->nitems)
@@ -1087,6 +1107,66 @@ web_get_ext_cmd(void)
         return hit;
     pline("%s: %s extended command.", buf, n ? "ambiguous" : "unknown");
     return -1;
+}
+
+/* RVIP 3b: Enter = menu of every command, grouped like the '?' key list
+   (dat/hh "General" and "Game" commands, key shown) plus every extended
+   command.  The choice is queued as keys (kq), so prefixes and prompts
+   work as if typed.  Called from rhack() (src/cmd.c). */
+void
+web_cmdmenu(void)
+{
+    dlb *f = dlb_fopen(NH_SHELP, "r");
+    char buf[BUFSZ], *t;
+    winid w = web_create_nhwindow(NHW_MENU);
+    anything any;
+    menu_item *sel;
+    int i, k, on = 0;
+
+    web_start_menu(w);
+    while (f && dlb_fgets(buf, BUFSZ, f)) {
+        if ((t = index(buf, '\n')) != 0)
+            *t = 0;
+        (void) tabexpand(buf);
+        if (!strncmp(buf, "General", 7))
+            on = 1;
+        if (!strncmp(buf, "Keyboards", 9)) /* M- keys: listed as #name */
+            break;
+        if (!on || !*buf || *buf == ' ')
+            continue;
+        any.a_void = 0;
+        if (buf[strlen(buf) - 1] == ':') { /* group heading */
+            web_add_menu(w, NO_GLYPH, &any, 0, 0, ATR_BOLD, buf, FALSE);
+            continue;
+        }
+        k = buf[1] == ' ' ? buf[0]
+            : (buf[0] == '^' && buf[2] == ' ') ? buf[1] & 0x1f : 0;
+        if (!k) /* "n#", "),[,=": not one key */
+            continue;
+        any.a_int = k;
+        web_add_menu(w, NO_GLYPH, &any, 0, k, ATR_NONE, buf, FALSE);
+    }
+    if (f)
+        (void) dlb_fclose(f);
+    any.a_void = 0;
+    web_add_menu(w, NO_GLYPH, &any, 0, 0, ATR_BOLD,
+                 "Extended commands (# name):", FALSE);
+    for (i = 0; extcmdlist[i].ef_txt; i++) {
+        snprintf(buf, sizeof buf, "#%-14s %s", extcmdlist[i].ef_txt,
+                 extcmdlist[i].ef_desc);
+        any.a_int = 0x1000 + i;
+        web_add_menu(w, NO_GLYPH, &any, 0, 0, ATR_NONE, buf, FALSE);
+    }
+    web_end_menu(w, "Commands");
+    if (web_select_menu(w, PICK_ONE, &sel) > 0) {
+        k = sel[0].item.a_int;
+        free((genericptr_t) sel);
+        if (k >= 0x1000)
+            snprintf(kq, sizeof kq, "#%s\n", extcmdlist[k - 0x1000].ef_txt);
+        else
+            kq[0] = (char) k, kq[1] = 0;
+    }
+    web_destroy_nhwindow(w);
 }
 
 static void

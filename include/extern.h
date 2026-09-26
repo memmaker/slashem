@@ -785,7 +785,9 @@ E int NDECL(max_capacity);
 E boolean FDECL(check_capacity, (const char *));
 E int NDECL(inv_cnt);
 /* RVIP */
-E boolean rvip_keyhit;
+E boolean rvip_keyhit, rvip_reopen, rvip_invlist;
+E char rvip_pick;
+E struct obj *rvip_obj;
 E boolean NDECL(rvip_hostile_in_view);
 E boolean FDECL(rvip_start, (int));
 E boolean NDECL(rvip_continue);
@@ -1519,6 +1521,8 @@ E void NDECL(free_autopickup_exceptions);
 #endif /* AUTOPICKUP_EXCEPTIONS */
 
 /* ### pager.c ### */
+
+E void FDECL(checkfile, (char *,struct permonst *,BOOLEAN_P,BOOLEAN_P));
 
 E int NDECL(dowhatis);
 E int NDECL(doquickwhatis);

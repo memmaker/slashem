@@ -35,7 +35,7 @@ G       Followed by direction, same as control-direction
 h       Go west 1 space (if number_pad is on, display help message)
 H       Go west until you are on top of something
 ^H      Go west until you are near something
-i       Show your inventory
+i       Show your inventory (cursor; letter = main action, Enter = item menu)
 I       Inventory specific item types
 j       Go south 1 space (or if number_pad is on, jump to another location)
 J       Go south until you are on top of something
@@ -80,6 +80,7 @@ Z       Zap (cast) a spell
 <       Go up a staircase (elsewhere: walk to the known up staircase)
 >       Go down a staircase (elsewhere: walk to the known down staircase)
 /       Show what type of thing a symbol corresponds to
+^M      Enter: menu of all commands
 ?       Give a help message
 &       Tell what a command does
 `       Access the menusystem

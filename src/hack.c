@@ -2821,6 +2821,9 @@ struct obj *otmp;
 static char rvip_mode;		/* 0, '~' explore, '<' or '>' */
 static char rvip_msg[TBUFSZ];
 boolean rvip_keyhit;
+boolean rvip_reopen;	/* 'i' list reopens after an item action (invent.c) */
+boolean rvip_invlist;	/* the 'i' list is up: winweb.c sets rvip_pick */
+char rvip_pick;		/* 'm' letter, 'd' drop, 'x' examine, 0 Enter = menu */
 
 STATIC_OVL boolean
 rvip_goal(x, y)
@@ -2940,6 +2943,13 @@ rvip_continue()
 {
 	char m = rvip_mode;
 
+	if (rvip_reopen) {
+	    rvip_reopen = FALSE;
+	    if (!rvip_hostile_in_view()) {
+		if (!ddoinv()) flags.move = FALSE;
+		return TRUE;
+	    }
+	}
 	if (!m)
 	    return FALSE;
 	if (rvip_keyhit || strcmp(rvip_msg, toplines)

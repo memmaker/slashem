@@ -17,6 +17,7 @@ b j n   1 2 3           g<dir>:   run in direction <dir> until something
 
 General commands:
 ?       help    display one of several informative texts
+Enter   menu    menu of all commands (arrows or 8/2, the key, Enter, Esc)
 `       menu    access the menusystem
 S       save    save the game (to be continued later)
 !       sh      escape to some SHELL (if allowed)
@@ -49,6 +50,12 @@ E       engrave write a message in the dust on the floor  (E-  use fingers)
 f	fire    fire item from quiver           
 F       fight   followed by direction, fight a monster
 i       invent  list your inventory (all objects you are carrying)
+                with a cursor (8/2): letter = main action (eat, quaff,
+                read, zap, apply, wear, wield, put on, take off, else
+                examine), Enter/Space/5/click = menu of all its actions,
+                + main action, - drop, * or Ctrl+letter examine, 0/Esc close.
+                The list reopens after an action unless a monster is in
+                view.  Item prompts show the same list (Enter reopens it).
 I       Invent  list selected parts of your inventory
                 Iu: list unpaid objects
                 Ix: list unpaid but used up items
