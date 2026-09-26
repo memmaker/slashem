@@ -236,3 +236,40 @@
   window and scrolls with the hero (by design). No `beforeunload` warning
   (checkpoints make it unnecessary). help.html missing until stage 6.
 - Next: stage 6 (docs + `web/make-help.py` → help.html, sound).
+
+### Stage 6 (docs + sound) — done 2026-09-26
+- Docs: `~/Desktop/Games/Roguelikes/Docs/` entry `slashem.html` (`build-docs.py`
+  GAMES, facts per W1, essentials incl. `~`, `<`/`>`, Enter, `i`; "In the
+  browser" section; new `parse_nethack343()` for 3.4.3's column-format
+  `dat/hh`, 88 keys incl. M- keys) + `guides.py` guide (differences, first
+  steps, staying alive) and a web "Saving" section (checkpoint recovery, `S`
+  + reload, Export/Import). `python3 build-docs.py` rebuilt all 30 pages.
+- Help: `web/make-help.py` (copy of nethack50's, reads that Docs entry,
+  Saving from `guides.SAVING`, web notes incl. Sound/Music, "About this
+  version" with the SourceForge 0.0.7E7F3 link and github.com/memmaker/slashem
+  (not created yet)). `build.sh` always writes `dist/help.html`.
+- Sound: no shared `rvip-tools/web/websound.c` exists (only `rvip-sound.js`),
+  and nethack50's is a 5.0 soundlib, so `win/web/websound.c` is our own:
+  `web_sound_msg()` (called in `add_msg()`) matches every message against a
+  `pmatch` table (the USER_SOUNDS idea, built in, no config file) → effect
+  name; `web_sound_where()` (after each `js_map`) plays `stairs` on a level
+  change and reports town = `in_town(u.ux,u.uy) || *u.ushops` for the music.
+  JS `nh.sound/nh.music` in `slashem.js` play only if the top-bar toggles are
+  on (`sound`/`music` in `web-layout.json`, default off); `RVIPSound.play`,
+  town loop via a lazy `Audio('sound/town.wav')`.
+- Wavs: synthesized by `web/mksounds.py` at build time into `dist/sound/`
+  (hit kill miss hurt die levelup hear door gold stairs + town loop), our own
+  work, CC0. nethack50's wavs were not used (instrument/squeak samples, some
+  CC-BY-4.0 needing attribution, none fit combat).
+- Tested (local server 127.0.0.1:8791, own tab, throwaway "Tsnd"): Sound/Music
+  "off" at start, no wav requests; Sound on → door/stairs/hear/kill played
+  (`sound/*.wav` 200 in the resource log); state survived reload; music
+  toggle persisted, `nh.music(1)` loaded town.wav; Help: 7 sections, 88-key
+  list, both links, keys don't reach the game while open, Escape closes; no
+  console errors. Test DB `/slashem` deleted, tab closed, server killed.
+- Open: town music not heard in real Minetown/shop play (C test untested in
+  game); message patterns cover common hit/miss/kill texts only (misses
+  "The X claws" variants beyond those listed).
+- Next: stage 7 publish: `gh repo create memmaker/slashem` + push, deploy via
+  `web/deploy.sh`, card + tree entry on the selection page, RVIP.md
+  self-improve (3.4.3 notes from stages 1–6).

@@ -16,6 +16,7 @@
 #include <stdarg.h>
 
 extern short glyph2tile[]; /* src/tile.c (util/tilemap) */
+extern void web_sound_msg(const char *), web_sound_where(void); /* websound.c */
 
 EM_JS(void, js_map, (int *c, int *t, int hx, int hy, int lev),
       { Module.nh.map(c, t, hx, hy, lev); });
@@ -141,6 +142,7 @@ redraw(void)
             chars[y * COLNO + x] = (ch & 0xff) | cidx(0, color) << 8;
         }
     js_map(cells, chars, u.ux, u.uy, u.uz.dnum * 100 + u.uz.dlevel);
+    web_sound_where();
     js_text(0, promptbuf);
 
     tlen = 0, tadd("%s", "");
@@ -254,6 +256,7 @@ static void
 add_msg(const char *s)
 {
     snprintf(toplines, TBUFSZ, "%s", s); /* tty keeps this; explore reads it */
+    web_sound_msg(s);
     /* RVIP: a repeat of the newest message becomes "message (xN)" */
     if (nhist && !strcmp(s, hist_prev)) {
         char fold[BUFSZ + 16];

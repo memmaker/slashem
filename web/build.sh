@@ -35,7 +35,7 @@ SRCS=$(ls src/*.c | grep -v '/borg\.c$')
 emcc -O2 $EMFLAGS -w -Wno-implicit-int -Wno-implicit-function-declaration -Wno-int-conversion \
 	-Wno-incompatible-function-pointer-types -Wno-return-mismatch -Iinclude \
 	$SRCS sys/share/ioctl.c sys/share/unixtty.c \
-	sys/unix/unixmain.c sys/unix/unixres.c sys/unix/unixunix.c win/web/winweb.c \
+	sys/unix/unixmain.c sys/unix/unixres.c sys/unix/unixunix.c win/web/winweb.c win/web/websound.c \
 	--preload-file "$SEED@/seed" -o "$OUT/slashem-core.js" \
 	-sASYNCIFY -sASYNCIFY_STACK_SIZE=131072 -sSTACK_SIZE=2097152 \
 	-sALLOW_MEMORY_GROWTH -sEXIT_RUNTIME=1 -sINITIAL_MEMORY=64MB \
@@ -44,7 +44,8 @@ emcc -O2 $EMFLAGS -w -Wno-implicit-int -Wno-implicit-function-declaration -Wno-i
 	-sFORCE_FILESYSTEM -lidbfs.js -sENVIRONMENT=web
 rm -rf "$SEED"
 python3 web/mktiles.py win/share "$OUT/tiles.png"
-cp web/index.html web/slashem.js "$HOME/Games/rvip-tools/web/rvip-wm.js" "$OUT/"
-if [ -f web/make-help.py ]; then python3 web/make-help.py > "$OUT/help.html"
-else echo "NOTE: web/make-help.py not built yet (RVIP stage 6): no help.html, the Help button says so"; fi
+cp web/index.html web/slashem.js "$HOME/Games/rvip-tools/web/rvip-wm.js" \
+	"$HOME/Games/rvip-tools/web/rvip-sound.js" "$OUT/"
+python3 web/mksounds.py "$OUT/sound"      # synthesized effects + town loop (CC0)
+python3 web/make-help.py > "$OUT/help.html"
 ls -la "$OUT"

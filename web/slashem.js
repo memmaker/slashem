@@ -21,7 +21,7 @@
 	var cv, ctx, cell = 32, auto = true, sheet = new Image(), perRow = 40;
 	var dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 	var log = [], prompt = '', rects = {}, wm = null;
-	var L = { cell: 0, font: 13, wm: null, text: false }, LAYOUT = DIR + '/web-layout.json';
+	var L = { cell: 0, font: 13, wm: null, text: false, sound: false, music: false }, LAYOUT = DIR + '/web-layout.json';
 
 	function $(id) { return document.getElementById(id); }
 	function status(msg, isError) {
@@ -112,8 +112,8 @@
 	}
 	function fonts() { ['msg', 'stat', 'inv', 'pop'].forEach(function (id) { $(id).style.fontSize = L.font + 'px'; }); }
 	function makeWM() {
-		try { var s = JSON.parse(Module.FS.readFile(LAYOUT, { encoding: 'utf8' })); if (s) L = { cell: s.cell | 0, font: s.font || 13, wm: s.wm, text: !!s.text }; } catch (e) { }
-		showMode();
+		try { var s = JSON.parse(Module.FS.readFile(LAYOUT, { encoding: 'utf8' })); if (s) L = { cell: s.cell | 0, font: s.font || 13, wm: s.wm, text: !!s.text, sound: s.sound === true, music: s.music === true }; } catch (e) { }
+		showMode(); showAudio();
 		if (L.cell >= 12 && L.cell <= 64) { cell = L.cell; auto = false; }
 		var H = $('game').clientHeight || 600, line = Math.ceil(L.font * 1.4) + 6;
 		wm = RvipWM({
@@ -130,6 +130,17 @@
 		wm.apply();
 	}
 	function showMode() { $('btn-tiles').textContent = L.text ? 'Tiles: Text' : 'Tiles: SLASH\'EM'; }
+	/* ---------- sound (RVIP 6b): C names the effect (win/web/websound.c), off by default ---------- */
+	var song = null, town = false;
+	function showAudio() {
+		$('btn-sound').textContent = 'Sound: ' + (L.sound ? 'on' : 'off');
+		$('btn-music').textContent = 'Music: ' + (L.music ? 'on' : 'off');
+		if (L.music && town) {
+			if (!song) { song = new Audio('sound/town.wav'); song.loop = true; song.volume = 0.4; }
+			song.play().catch(function () { });
+		} else if (song) song.pause();
+	}
+	function toggleAudio(k) { L[k] = !L[k]; showAudio(); saveLayout(); }
 	function zoom(d) {
 		auto = false;
 		cell = Math.max(12, Math.min(64, cell + d));
@@ -147,6 +158,8 @@
 			if (moved || lv) scrollMap(lv);
 			draw();
 		},
+		sound: function (name) { if (L.sound) RVIPSound.play([name], 0.6); },
+		music: function (on) { town = !!on; showAudio(); },
 		last: [],
 		text: function (id, t) {
 			if (id === 4) { log.push({ t: t }); if (log.length > 300) log.shift(); drawMsgs(); return; }
@@ -347,6 +360,8 @@
 		$('btn-tiles').onclick = function () { L.text = !L.text; showMode(); saveLayout(); draw();
 			[2, 3].forEach(function (id) { var t = nh.last[id]; if (t != null) { nh.last[id] = null; nh.text(id, t); } });
 		};
+		$('btn-sound').onclick = function () { toggleAudio('sound'); };
+		$('btn-music').onclick = function () { toggleAudio('music'); };
 		$('btn-zoom-in').onclick = function () { zoom(4); };
 		$('btn-zoom-out').onclick = function () { zoom(-4); };
 		$('btn-restart').onclick = function () { location.reload(); };
