@@ -956,6 +956,9 @@ die:
 
 	/* "So when I die, the first thing I will see in Heaven is a
 	 * score list?" */
+#ifdef __EMSCRIPTEN__
+	{ extern void be_run_end(int); be_run_end(how); }
+#endif
 	if (flags.toptenwin) {
 	    topten(how);
 	    if (have_windows)
