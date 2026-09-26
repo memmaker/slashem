@@ -77,8 +77,8 @@ Y       Go northwest until you are on top of something
 ^Y      Go northwest until you are near something
 z       Zap a wand
 Z       Zap (cast) a spell
-<       Go up a staircase
->       Go down a staircase
+<       Go up a staircase (elsewhere: walk to the known up staircase)
+>       Go down a staircase (elsewhere: walk to the known down staircase)
 /       Show what type of thing a symbol corresponds to
 ?       Give a help message
 &       Tell what a command does
@@ -86,6 +86,7 @@ Z       Zap (cast) a spell
 !       Do a shell escape (only if defined)
 \       Show what object types have been discovered
 _       Travel via a shortest-path algorithm to a point on the map 
+~       Explore the level until something happens
 .       Rest one move while doing nothing
         Rest one move while doing nothing (if rest_on_space option is on)
 :       Look at what is on the floor

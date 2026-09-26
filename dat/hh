@@ -71,14 +71,15 @@ x       exchange swap weapon slots
 X       spells  list the spells you know
 z       zap     zap a wand
 Z       Zap     cast a spell
-<       up      go up the stairs
->       down    go down the stairs
+<       up      go up the stairs (elsewhere: walk to known up stairs)
+>       down    go down the stairs (elsewhere: walk to known down stairs)
 ^       trap_id identify a previously found trap
 ),[,=,",(               ask for current items of specified symbol in use
 *       items   list and change items in use
 $       gold    count your gold
 +       spells  list the spells you know
 _       travel  move via a shortest-path algorithm to a point on the map
+~       explore explore the level until something happens
 .       rest    wait a moment
 ,       pickup  pick up all you can carry
 @               toggle "pickup" (auto pickup) option on and off

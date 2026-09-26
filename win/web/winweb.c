@@ -234,6 +234,7 @@ getkey(boolean want_mouse)
 static void
 add_msg(const char *s)
 {
+    snprintf(toplines, TBUFSZ, "%s", s); /* tty keeps this; explore reads it */
     /* RVIP: a repeat of the newest message becomes "message (xN)" */
     if (nhist && !strcmp(s, hist_prev)) {
         char fold[BUFSZ + 16];
@@ -541,6 +542,10 @@ web_get_nh_event(void)
 {
     static double last;
 
+    if (js_key(1, 0) > 0) { /* RVIP: a typed key stops runs and explore */
+        rvip_keyhit = TRUE;
+        nomul(0);
+    }
     if (emscripten_get_now() - last > 50) { /* let the page paint */
         last = emscripten_get_now();
         redraw();

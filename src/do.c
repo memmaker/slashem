@@ -786,6 +786,11 @@ dodown()
 		    (u.ux == sstairs.sx && u.uy == sstairs.sy && !sstairs.up)),
 		ladder_down = (u.ux == xdnladder && u.uy == ydnladder);
 
+	/* RVIP: walk to the nearest known down stairs */
+	if (!stairs_down && !ladder_down && !Levitation && !u.ustuck
+	    && !t_at(u.ux, u.uy) && rvip_start('>'))
+		return(1);
+
 	if (Role_if(PM_GNOME) && on_level(&mineend_level,&u.uz)) {
 		pline("The staircase is filled with tons of rubble and debris.");
 		pline("Poor Ruggo!");
@@ -880,6 +885,10 @@ doup()
 	     && (!sstairs.sx || u.ux != sstairs.sx || u.uy != sstairs.sy
 			|| !sstairs.up)
 	  ) {
+		/* RVIP: walk to the nearest known up stairs */
+		if (!Levitation && !u.ustuck
+		    && !(u.utrap && u.utraptype == TT_PIT) && rvip_start('<'))
+			return(1);
 		You_cant("go up here.");
 		return(0);
 	}

@@ -75,3 +75,42 @@
   yacc rules; `nul[]` too small for `struct fruit` on 64-bit (3.4.3 family).
 - Next: stage 2 (explore + stairs), like nethack50 (`rvip_*` in `src/hack.c`,
   main-loop hook in `src/allmain.c`, `<`/`>` in `src/do.c`).
+
+### Stage 2 (explore + stairs) — done 2026-09-26
+- Explore key `~` = `#autoexplore` (`src/cmd.c`: `cmdlist` entry replaces the
+  duplicate `` ` ``/`~` → `domenusystem` binding; `extcmdlist` entry after
+  "adjust"). Help lines in `dat/hh` (`?` → b) and `dat/cmdhelp` (copied into
+  `playground/` for the web seed).
+- Code: end of `src/hack.c` (`rvip_goal`, `rvip_step`, `rvip_hostile_in_view`,
+  `rvip_start`, `rvip_continue`, `doexplore`), externs in `include/extern.h`.
+  `src/lock.c`: `doopen()` split into `doopen()` + `doopen_indir(x,y)` (3.4.3
+  vanilla has no autoopen); explore calls `doopen_indir` on a closed door.
+- Main-loop hook: `src/allmain.c` `moveloop()`, `multi == 0` branch:
+  `if (!rvip_continue()) rhack((char *)0);` — one BFS step per idle turn.
+- `<`/`>`: `src/do.c` at the top of `dodown()`/`doup()`: not on matching
+  stairs → `rvip_start('>'/'<')` walks to the nearest known one and calls
+  `dodown()`/`doup()` on arrival (3.4.3 stairs = `xupstair/yupstair`,
+  `xdnstair/ydnstair`, `xupladder/yupladder`, `xdnladder/ydnladder`, `sstairs`).
+- "Known grid" test: `levl[x][y].seenv` (frontier = seenv cell with a
+  seenv==0 neighbour; stairs must have seenv). Steps: `test_move(x,y,dx,dy,
+  TEST_TRAV)` (closed doors pass orthogonally), skipping `is_pool`/`is_lava`,
+  seen traps, boulders (a stuck one stopped explore for good), visible
+  non-tame monsters, and doors that answered "locked" (per-level table
+  `locked[][]` in `rvip_step`, reset when `u.uz` changes).
+- Stops: hostile in view, `toplines` changed (the web port now copies every
+  message into `toplines` in `add_msg()` — vanilla only tty does), a key
+  (`rvip_keyhit`, set in `web_get_nh_event()` when `js_key(1,0)` reports a
+  waiting key; it also `nomul(0)`s runs), `u.uinwater`, `multi`, failed move.
+- Tested in the browser pane: `~` mapped Dlvl 1 (5 rooms, opened 4 doors,
+  stopped on rabbit/lichen/grid bug, on "You hear…" messages, skipped the
+  stuck boulder and the locked door after one try, ended with "Nothing left
+  to explore here."); `<` walked 13 cells to the up stairs → "Still climb?";
+  `>` walked to the down stairs and descended (Dlvl:2); a queued key stopped
+  explore after one step; help shows the new lines; no console errors.
+- Open: any message stops explore ("You hear…", "You displaced your
+  kitten", hunger), so long explores need several presses; the fold
+  "(xN)" hides identical repeats from the toplines test. Walk segments
+  shorter than 50 ms never yield to the browser, so a human key can only
+  interrupt longer walks. No autosave yet (stage 1 note).
+- Next: stage 3 (Enter menu + inventory item menus) in `win/web/winweb.c`,
+  building on SLASH'EM's own Enter = Main Menu.

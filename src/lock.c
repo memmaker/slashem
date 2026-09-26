@@ -778,9 +778,20 @@ int
 doopen()		/* try to open a door */
 {
 	coord cc;
+
+	if(!get_adjacent_loc((char *)0, (char *)0, u.ux, u.uy, &cc)) return(0);
+	return doopen_indir(cc.x, cc.y);
+}
+
+int
+doopen_indir(x, y)	/* try to open the door at (x,y); RVIP explore */
+int x, y;
+{
+	coord cc;
 	register struct rm *door;
 	struct monst *mtmp;
 
+	cc.x = x, cc.y = y;
 	if (nohands(youmonst.data)) {
 	    You_cant("open anything -- you have no hands!");
 	    return 0;
@@ -790,8 +801,6 @@ doopen()		/* try to open a door */
 	    You_cant("reach over the edge of the pit.");
 	    return 0;
 	}
-
-	if(!get_adjacent_loc((char *)0, (char *)0, u.ux, u.uy, &cc)) return(0);
 
 	if((cc.x == u.ux) && (cc.y == u.uy)) return(0);
 

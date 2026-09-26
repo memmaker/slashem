@@ -2814,4 +2814,159 @@ struct obj *otmp;
 #endif
 #endif /* OVLB */
 
+#ifdef OVLB
+/* RVIP: auto-explore ('~') and '<' / '>' walks to known stairs.
+   One step per turn; moveloop calls rvip_continue() when idle.
+   Stops on a visible hostile, a new message or a key (rvip_keyhit). */
+static char rvip_mode;		/* 0, '~' explore, '<' or '>' */
+static char rvip_msg[TBUFSZ];
+boolean rvip_keyhit;
+
+STATIC_OVL boolean
+rvip_goal(x, y)
+int x, y;
+{
+	int dx, dy;
+
+	if (rvip_mode == '<')
+	    return (boolean) (levl[x][y].seenv
+		&& ((x == xupstair && y == yupstair)
+		    || (xupladder && x == xupladder && y == yupladder)
+		    || (sstairs.sx && sstairs.up
+			&& x == sstairs.sx && y == sstairs.sy)));
+	if (rvip_mode == '>')
+	    return (boolean) (levl[x][y].seenv
+		&& ((x == xdnstair && y == ydnstair)
+		    || (xdnladder && x == xdnladder && y == ydnladder)
+		    || (sstairs.sx && !sstairs.up
+			&& x == sstairs.sx && y == sstairs.sy)));
+	for (dx = -1; dx <= 1; dx++)
+	    for (dy = -1; dy <= 1; dy++)
+		if (isok(x + dx, y + dy) && !levl[x + dx][y + dy].seenv)
+		    return TRUE;
+	return FALSE;
+}
+
+/* BFS over known squares; one step toward the nearest goal.
+   Returns 1 moved (or opened a door), 0 nothing to do, -1 on the goal */
+STATIC_OVL int
+rvip_step()
+{
+	static xchar qx[COLNO * ROWNO], qy[COLNO * ROWNO];
+	static schar first[COLNO][ROWNO];	/* direction of first step + 1 */
+	static char locked[COLNO][ROWNO];	/* doors that said "locked" */
+	static d_level lockz;
+	int h = 0, t = 0, d, x, y, nx, ny;
+	struct trap *tr;
+	struct monst *mtmp;
+
+	if (rvip_mode != '~' && rvip_goal(u.ux, u.uy))
+	    return -1;
+	if (!on_level(&lockz, &u.uz)) {
+	    (void) memset((genericptr_t) locked, 0, sizeof locked);
+	    lockz = u.uz;
+	}
+	(void) memset((genericptr_t) first, 0, sizeof first);
+	first[u.ux][u.uy] = -1;
+	qx[t] = u.ux, qy[t++] = u.uy;
+	while (h < t) {
+	    x = qx[h], y = qy[h++];
+	    for (d = 0; d < 8; d++) {
+		nx = x + xdir[d], ny = y + ydir[d];
+		if (!isok(nx, ny) || first[nx][ny] || !levl[nx][ny].seenv
+		    || !test_move(x, y, xdir[d], ydir[d], TEST_TRAV)
+		    || is_pool(nx, ny) || is_lava(nx, ny)
+		    || sobj_at(BOULDER, nx, ny)	/* a stuck one stops us for good */
+		    || (locked[nx][ny] && closed_door(nx, ny))
+		    || ((tr = t_at(nx, ny)) != 0 && tr->tseen)
+		    || ((mtmp = m_at(nx, ny)) != 0 && canspotmon(mtmp)
+			&& !mtmp->mtame))
+		    continue;
+		first[nx][ny] = (x == u.ux && y == u.uy) ? d + 1 : first[x][y];
+		if (rvip_goal(nx, ny)) {
+		    d = first[nx][ny] - 1;
+		    nx = u.ux + xdir[d], ny = u.uy + ydir[d];
+		    if (closed_door(nx, ny)) {	/* opens, never picks locks */
+			if (!doopen_indir(nx, ny)) {
+			    flags.move = 0;
+			    locked[nx][ny] = 1;
+			}
+			return 1;
+		    }
+		    u.dx = xdir[d], u.dy = ydir[d], u.dz = 0;
+		    flags.travel = iflags.travel1 = flags.mv = flags.run = 0;
+		    domove();
+		    return 1;
+		}
+		qx[t] = nx, qy[t++] = ny;
+	    }
+	}
+	return 0;
+}
+
+boolean
+rvip_hostile_in_view()
+{
+	struct monst *mtmp;
+
+	for (mtmp = fmon; mtmp; mtmp = mtmp->nmon)
+	    if (!DEADMONSTER(mtmp) && canspotmon(mtmp) && !mtmp->mtame
+		&& !mtmp->mpeaceful)
+		return TRUE;
+	return FALSE;
+}
+
+/* start a walk; FALSE if there is nowhere to go */
+boolean
+rvip_start(mode)
+int mode;
+{
+	int r;
+
+	rvip_mode = mode;
+	rvip_keyhit = FALSE;
+	Strcpy(rvip_msg, toplines);
+	r = rvip_step();
+	if (r <= 0 || !flags.move)
+	    rvip_mode = 0;
+	if (r == 0 && mode == '~')
+	    pline("Nothing left to explore here.");
+	return (boolean) (r > 0);
+}
+
+/* called from moveloop when idle; TRUE if it used the turn */
+boolean
+rvip_continue()
+{
+	char m = rvip_mode;
+
+	if (!m)
+	    return FALSE;
+	if (rvip_keyhit || strcmp(rvip_msg, toplines)
+	    || rvip_hostile_in_view() || u.uinwater || multi) {
+	    rvip_mode = 0;
+	    return FALSE;
+	}
+	switch (rvip_step()) {
+	case 1:
+	    Strcpy(rvip_msg, toplines);
+	    if (!flags.move) rvip_mode = 0;
+	    return TRUE;
+	case -1:
+	    rvip_mode = 0;
+	    if (!(m == '>' ? dodown() : doup())) flags.move = 0;
+	    return TRUE;
+	default:
+	    rvip_mode = 0;
+	    return FALSE;
+	}
+}
+
+int
+doexplore()
+{
+	return rvip_start('~') ? 1 : 0;
+}
+#endif /* OVLB */
+
 /*hack.c*/

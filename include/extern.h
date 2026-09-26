@@ -784,6 +784,12 @@ E int FDECL(calc_capacity, (int));
 E int NDECL(max_capacity);
 E boolean FDECL(check_capacity, (const char *));
 E int NDECL(inv_cnt);
+/* RVIP */
+E boolean rvip_keyhit;
+E boolean NDECL(rvip_hostile_in_view);
+E boolean FDECL(rvip_start, (int));
+E boolean NDECL(rvip_continue);
+E int NDECL(doexplore);
 #ifdef GOLDOBJ
 E long FDECL(money_cnt, (struct obj *));
 #endif
@@ -950,6 +956,7 @@ E int NDECL(doforce);
 E boolean FDECL(boxlock, (struct obj *,struct obj *));
 E boolean FDECL(doorlock, (struct obj *,int,int));
 E int NDECL(doopen);
+E int FDECL(doopen_indir, (int,int));
 E int NDECL(doclose);
 E int FDECL(artifact_door, (int,int));
 

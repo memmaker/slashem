@@ -464,7 +464,8 @@ moveloop()
 #ifdef MAIL
 	    ckmailstatus();
 #endif
-	    rhack((char *)0);
+	    if (!rvip_continue())	/* RVIP: explore / stairs walk step */
+		rhack((char *)0);
 	}
 	if (u.utotype)		/* change dungeon level */
 	    deferred_goto();	/* after rhack() */

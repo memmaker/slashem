@@ -2207,7 +2207,7 @@ static const struct func_tab cmdlist[] = {
 /* WAC Angband style items in use, menusystem
 	{'*', TRUE, doinvinuse}, */
 	{'`', TRUE, domenusystem},
-	{'~', TRUE, domenusystem},
+	{'~', TRUE, doexplore},	/* RVIP */
 	{WEAPON_SYM,  TRUE, doprwep},
 	{ARMOR_SYM,  TRUE, doprarm},
 	{RING_SYM,  TRUE, doprring},
@@ -2224,6 +2224,7 @@ static const struct func_tab cmdlist[] = {
 struct ext_func_tab extcmdlist[] = {
 	{"2weapon", "toggle two-weapon combat", dotwoweapon, FALSE},
 	{"adjust", "adjust inventory letters", doorganize, TRUE},
+	{"autoexplore", "explore the level until something happens", doexplore, FALSE},
 	{"borrow", "steal from monsters", playersteal, FALSE},  /* jla */        
 	{"chat", "talk to someone", dotalk, TRUE},	/* converse? */
 	{"conduct", "list which challenges you have adhered to", doconduct, TRUE},
