@@ -273,3 +273,31 @@
 - Next: stage 7 publish: `gh repo create memmaker/slashem` + push, deploy via
   `web/deploy.sh`, card + tree entry on the selection page, RVIP.md
   self-improve (3.4.3 notes from stages 1–6).
+
+### Stage 7 (publish) — done 2026-09-26
+- Repo https://github.com/memmaker/slashem (remote `memmaker`, branch `main`),
+  base `ab6287b` = SourceForge `se007e7f3.tar.gz`; `README.md` head links the
+  tarball page and the compare view `ab6287b...main`.
+- Live: https://ruzzoli.de/roguelikes/slashem/ (`web/build.sh` +
+  `web/deploy.sh` from pushed `e36af5d`). curl 200: page, wasm, js,
+  help.html, tiles.png, sound/*.wav. Own tab: title → "Who are you?" →
+  born (neutral gnomish Archeologist, throwaway "Tpub"); then only the
+  `/slashem` IndexedDB on ruzzoli.de deleted, tab closed.
+- Selection page: card (`slashem.png`, 60 monster tiles from our tiles.png,
+  ×2 nearest), tag "NetHack variant · 1997"; tree: existing SLASH'EM span
+  under NetHack turned into a gold link (`slashem/`), no ✦ yet. Deployed,
+  live index = local.
+- Lineage: `dat/history` + `doc/Guidebook.txt`: SLASH (Tom Proudfoot 1996)
+  → SLASH 4.1.2 (Enrico Horn, on NetHack 3.2); Warren Cheung combined SLASH
+  4.1.2 + Wizard Patch (Larry Stewart-Zerba) into SLASH'EM 0.1, **November
+  1997**. 0.0.7E7F3 is on NetHack 3.4.3 (`README.34`, patchlevel.h SCCS
+  3.4). NetHackWiki: based on 3.4.3, first release **7 January 1998** —
+  disagrees with the history file on the date; we keep 1997 (history file).
+- RVIP.md (rvip-tools, local commit `356f044`, not pushed): new Part O
+  section "O-SLASH'EM", case-table worked example, W2 row, Part 2 rule
+  "delete only the game's own IDBFS database", O-Hack `gh repo create` note
+  updated (works from the main session in bypass mode).
+- Note: the browser pane's `computer type` keys didn't reach the page on
+  the live site; `KeyboardEvent` dispatch from JS worked (as stage 1).
+- Next: stage 8 shrine (`~/Games/roguelikes-index/shrine/slashem.html`),
+  then Info button + tree ✦.
