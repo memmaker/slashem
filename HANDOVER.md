@@ -301,3 +301,25 @@
   the live site; `KeyboardEvent` dispatch from JS worked (as stage 1).
 - Next: stage 8 shrine (`~/Games/roguelikes-index/shrine/slashem.html`),
   then Info button + tree ✦.
+
+### Stage 8 (shrine) — done 2026-09-26
+- Page `~/Games/roguelikes-index/shrine/slashem.html` + `shrine/slashem/`
+  (Guidebook.txt from `doc/`, license.txt from `dat/license`, NGPL). No
+  screenshots (RVIP step 11 dropped them). Linked from the card (Info), the
+  tree (✦) and this game's `#bar h1` (`web/index.html`).
+- Sources: `dat/history`, `doc/Guidebook.txt` (history chapter),
+  `readme.txt` (0.0.7E7F3 = 30 Dec 2006, dev team), `include/patchlevel.h`;
+  fetched: NetHackWiki SLASH'EM + "Standard strategy (SLASH'EM)", Wikipedia,
+  slashem.sourceforge.net, RogueBasin. Counts grepped from the upstream tree
+  `ab6287b` (`src/role.c`, `src/monst.c`/`include/pm.h` NUMMONS 612,
+  `src/objects.c`/NUM_OBJECTS 537, `src/tech.c` 41, `include/artilist.h` 69,
+  `include/trap.h` 22, `dat/dungeon.def` 21 dungeons); 184,611 lines in 214
+  `src/*.c include/*.h`.
+- Year disagreement kept on the page: history file Nov 1997 vs NetHackWiki
+  7 Jan 1998. Wizard Patch is by Larry Stewart-Zerba (+ Warwick Allison),
+  not Kevin Hugo (Guidebook, sourceforge, RogueBasin agree). SourceForge and
+  RogueBasin say "based on NetHack 3.3.1" (true for 0.0.6, not 0.0.7).
+- Minetown's 7 variants are vanilla 3.4.3 too, so not listed as unique.
+- Manual: Guidebook copied. Walkthrough: none; NetHackWiki "Standard
+  strategy (SLASH'EM)" linked. Cheats: `-D` unreachable in the browser;
+  `X`/`#explore` works; Export/Import. No exploits listed (none fetched).
