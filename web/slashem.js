@@ -118,7 +118,7 @@
 		var H = $('game').clientHeight || 600, line = Math.ceil(L.font * 1.4) + 6;
 		wm = RvipWM({
 			area: $('game'), menu: $('btn-layout'),
-			wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Messages' }, { id: 'stat', title: 'Status' }, { id: 'inv', title: 'Inventory' }],
+			wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Log messages' }, { id: 'stat', title: 'Status' }, { id: 'inv', title: 'Inventory' }],
 			multi: { d: 'h', r: 0.75, a: { d: 'v', r: 0.2, a: 'msg', b: { d: 'v', r: 0.84, a: 'map', b: 'stat' } }, b: 'inv' },
 			single: { d: 'v', r: 3 * line / H, a: 'msg', b: { d: 'v', r: 1 - 3 * line / (H - 3 * line), a: 'map', b: 'stat' } },
 			state: L.wm, noFont: 'map',
@@ -322,6 +322,8 @@
 		if (e.error instanceof WebAssembly.RuntimeError || /slashem-core/.test(e.filename || '')) crashed(e.error || e.message);
 	});
 	document.addEventListener('visibilitychange', function () { if (document.hidden) syncFiles(); });
+	window.addEventListener('pagehide', function () { syncFiles(); });
+	setInterval(function () { if (running) syncFiles(); }, 15000);
 
 	window.addEventListener('resize', function () { if (wm) wm.apply(); });
 	document.addEventListener('keydown', onKey);

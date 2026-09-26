@@ -45,4 +45,6 @@ emcc -O2 $EMFLAGS -w -Wno-implicit-int -Wno-implicit-function-declaration -Wno-i
 rm -rf "$SEED"
 python3 web/mktiles.py win/share "$OUT/tiles.png"
 cp web/index.html web/slashem.js "$HOME/Games/rvip-tools/web/rvip-wm.js" "$OUT/"
+if [ -f web/make-help.py ]; then python3 web/make-help.py > "$OUT/help.html"
+else echo "NOTE: web/make-help.py not built yet (RVIP stage 6): no help.html, the Help button says so"; fi
 ls -la "$OUT"

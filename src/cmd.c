@@ -3232,6 +3232,9 @@ parse()
 		}
 	}
 
+#ifdef WEB_GRAPHICS
+	{ extern boolean web_at_cmd; web_at_cmd = TRUE; }	/* RVIP: prompt line, autosave */
+#endif
 	if (!iflags.num_pad || (foo = readchar()) == 'n')
 	    for (;;) {
 		foo = readchar();
@@ -3248,6 +3251,9 @@ parse()
 		    if (!multi && foo == '0') prezero = TRUE;
 		} else break;	/* not a digit */
 	    }
+#ifdef WEB_GRAPHICS
+	{ extern boolean web_at_cmd; web_at_cmd = FALSE; }
+#endif
 
 	if (foo == '\033') {   /* esc cancels count (TH) */
 	    clear_nhwindow(WIN_MESSAGE);

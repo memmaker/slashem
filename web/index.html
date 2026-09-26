@@ -16,6 +16,7 @@
 	#bar h1 a { color: inherit; text-decoration: none; }
 	#bar .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; flex: none; }
 	#bar .sp { flex: 1; }
+	#bar .ver { color: var(--dim); font-size: 11px; margin-left: 8px; }
 	#bar .hint { color: var(--dim); overflow: hidden; text-overflow: ellipsis; }
 	button { background: #22222a; color: var(--text); border: 1px solid var(--line); border-radius: 4px;
 		padding: 2px 10px; font: inherit; cursor: pointer; }
@@ -100,17 +101,18 @@
 	<span class="sep"></span>
 	<button id="btn-export" title="Download the save file">Export save</button>
 	<button id="btn-import" title="Load a save file from disk">Import save</button>
-	<button id="btn-new" title="Delete the saved game in this browser">New game</button>
+	<button id="btn-new" title="Delete the saved game in this browser and start a new character">New character</button>
 	<input type="file" id="import-file" hidden>
 	<span class="sp"></span>
-	<span class="hint">?: help · i: inventory · S: save · #: extended command</span>
+	<span class="hint">Enter: all commands · ~: explore · &lt; &gt;: walk to stairs · i: inventory · S: save</span>
+	<span class="ver">Based on SLASH'EM 0.0.7E7F3 · se007e7f3.tar.gz</span>
 </div>
 
 <div id="status">Loading SLASH'EM…</div>
 
 <div id="game" hidden>
 	<div class="win" id="t-map"><div class="t"><span class="name">Map</span></div><div class="body" id="map"><canvas></canvas></div></div>
-	<div class="win" id="t-msg"><div class="t"><span class="name">Messages</span></div><div class="body"><pre class="txt" id="msg"></pre></div></div>
+	<div class="win" id="t-msg"><div class="t"><span class="name">Log messages</span></div><div class="body"><pre class="txt" id="msg"></pre></div></div>
 	<div class="win" id="t-stat"><div class="t"><span class="name">Status</span></div><div class="body"><pre class="txt" id="stat"></pre></div></div>
 	<div class="win" id="t-inv"><div class="t"><span class="name">Inventory</span></div><div class="body"><div class="txt" id="inv"></div></div></div>
 	<div class="txt" id="pop" hidden></div>

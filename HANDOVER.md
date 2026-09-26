@@ -192,3 +192,47 @@
   `WIZARD`), fine for players, awkward for testing.
 - Next: stage 5 web page: window layout, persistence, autosave/recovery
   (stage 1 note), Help button (`help.html`), deploy prep.
+
+### Stage 5 (web page) — done 2026-09-26, tested locally, NOT deployed
+- Harness (`web/slashem.js`, `web/index.html`, copy of nethack50's): rvip-wm.js
+  tiling (Map, Log messages, Status, Inventory; one/multi toggle, Windows
+  drop-down, rename/A−/A+ on hover, Reset windows), automatic split + cell
+  size until dragged/zoomed, layout/zoom/fonts/titles/tiles-or-text in
+  `/slashem/web-layout.json` (IDBFS). Map camera `RvipWM.center` with the
+  hero cell from C (`js_map`). Prompt line `RvipWM.prompt.text` (id 0) +
+  `.wait(atCmd)`. Top bar: "SLASH'EM", `Based on SLASH'EM 0.0.7E7F3 ·
+  se007e7f3.tar.gz`, Help, Export/Import save, New character (clear only
+  `save/0*` and `0*.N`, layout kept). Game end → sync → "Play again";
+  `unhandledrejection`/`error` show "The game crashed … reload".
+- "Waiting for a command" flag: 3.4.3 has none, so `parse()` (`src/cmd.c`,
+  `WEB_GRAPHICS`) sets `web_at_cmd` (defined in `win/web/winweb.c`) around
+  its command/count read; `getkey()` passes `web_at_cmd && popup < 0`.
+- **Checkpoint:** `getkey()` calls `save_currentstate()` (INSURANCE: current
+  level file + full state in `0<name>.0`) after 1 s idle at the command
+  prompt once per key (and once after start/restore). JS syncs IDBFS every
+  2 s while waiting for keys, every 15 s, on `visibilitychange`/`pagehide`
+  and after save/end.
+- **Recovery:** `sys/unix/unixunix.c` `web_recover()` = `util/recover.c`'s
+  `restore_savefile()` (version + checkpoint level + game state + other
+  levels → `save/0<name>`); `getlock()` under `__EMSCRIPTEN__` calls it and
+  erases the level files instead of asking "Destroy old game?", then the
+  normal restore loads the save. Recovery fails → old files erased, new game.
+- `web/build.sh`: `help.html` only when `web/make-help.py` exists (prints a
+  "not built yet" note; the Help button shows the 404). `web/deploy.sh` with
+  the step-9 guard → `ruzzoli.de:/var/www/ruzzoli.de/roguelikes/slashem`
+  (not run: no memmaker remote yet, stage 7).
+- Tested (local server, own tab, throwaway names): birth → tiles → all
+  windows filled; `~`, Enter menu, `i`; rename + gutter drag + zoom survive
+  reload; zoomed map keeps the hero centred while exploring; prompt box
+  shows `[yn]` questions and `#` input, hides on a command key; reload
+  mid-game ×2 + reload with no key after restore → recovered in place, no
+  question; `S` + Play again restores; 300 random keys, no console errors
+  (only the expected help.html 404); `#quit` → "The game is over" → Play
+  again → new game; Export (0Imp, 21 KB) → New character (layout kept) →
+  Import → restored; resize 1000×650 → 1440×900 → 1200×750 (prompt open) →
+  760×500, one/multi toggle, no page scroll, backing store = CSS × dpr. Test
+  DB `/slashem` deleted.
+- Open: at cell 12 (minimum) the 80-column map is wider than a small map
+  window and scrolls with the hero (by design). No `beforeunload` warning
+  (checkpoints make it unnecessary). help.html missing until stage 6.
+- Next: stage 6 (docs + `web/make-help.py` → help.html, sound).

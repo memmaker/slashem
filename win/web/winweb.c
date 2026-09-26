@@ -183,9 +183,13 @@ redraw(void)
 /* returns a key, or 0 for a map click (mouse_* set).  From JS: ASCII,
  * 0x101.. arrows/Home/PgUp/End/PgDn, 0x10000|y<<8|x map click (0x8000 =
  * right button), 0x20000|row click on a pop-up row */
+boolean web_at_cmd; /* set by parse() (cmd.c) while it reads a command */
+
 static int
 getkey(boolean want_mouse)
 {
+    static boolean dirty = TRUE;
+    static double last;
     int k;
 
     if (perm_dirty && want_mouse && !restoring) /* names are loaded now */
@@ -200,11 +204,19 @@ getkey(boolean want_mouse)
             return k;
         }
 
-        /* at the command prompt: nh_poskey (mouse allowed), no pop-up/prompt */
-        if ((k = js_key(0, want_mouse && popup < 0 && !*promptbuf)) < 0) {
+        if ((k = js_key(0, web_at_cmd && popup < 0)) < 0) {
+            /* autosave: idle 1 s at the command prompt -> checkpoint the
+               level + game state (INSURANCE); JS copies it to IndexedDB,
+               getlock() (unixunix.c) recovers it after a closed tab */
+            if (dirty && web_at_cmd && program_state.something_worth_saving
+                && emscripten_get_now() - last > 1000) {
+                dirty = FALSE;
+                save_currentstate();
+            }
             emscripten_sleep(15);
             continue;
         }
+        dirty = TRUE, last = emscripten_get_now();
         if (k & 0x20000) {
             int i = k & 0xffff;
 

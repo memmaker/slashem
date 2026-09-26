@@ -102,6 +102,53 @@ eraseoldlocks()
 	return(1);					/* success! */
 }
 
+#ifdef __EMSCRIPTEN__
+/* RVIP web: util/recover.c's restore_savefile() inside the game (3.4.3 has
+ * no SELF_RECOVER).  A closed tab leaves the level files and the level-0
+ * checkpoint (winweb.c getkey(), INSURANCE); join them into the normal
+ * save file, which the startup then restores.  Returns 1 on success. */
+static int
+web_recover()
+{
+	int gfd, lfd, sfd, lev, savelev, hpid, n;
+	char sname[PL_NSIZ + 13], cbuf[BUFSIZ];
+	struct version_info version_data;
+	xchar levc;
+
+	if ((gfd = open_levelfile(0, (char *)0)) < 0) return 0;
+	if (read(gfd, (genericptr_t) &hpid, sizeof hpid) != sizeof hpid
+	    || read(gfd, (genericptr_t) &savelev, sizeof savelev) != sizeof savelev
+	    || read(gfd, (genericptr_t) sname, sizeof sname) != sizeof sname
+	    || read(gfd, (genericptr_t) &version_data, sizeof version_data)
+		!= sizeof version_data
+	    || (lfd = open_levelfile(savelev, (char *)0)) < 0) {
+		(void) close(gfd);
+		return 0;
+	}
+	sname[sizeof sname - 1] = 0;
+	if ((sfd = creat(fqname(sname, SAVEPREFIX, 0), FCMASK)) < 0) {
+		(void) close(lfd), (void) close(gfd);
+		return 0;
+	}
+#define WEB_COPY(from) while ((n = read(from, cbuf, sizeof cbuf)) > 0) (void) write(sfd, cbuf, n)
+	(void) write(sfd, (genericptr_t) &version_data, sizeof version_data);
+	WEB_COPY(lfd);		/* current level first, then the game state */
+	(void) close(lfd);
+	WEB_COPY(gfd);
+	(void) close(gfd);
+	for (lev = 1; lev < 256; lev++)
+		if (lev != savelev && (lfd = open_levelfile(lev, (char *)0)) >= 0) {
+			levc = (xchar) lev;
+			(void) write(sfd, (genericptr_t) &levc, sizeof levc);
+			WEB_COPY(lfd);
+			(void) close(lfd);
+		}
+#undef WEB_COPY
+	(void) close(sfd);
+	return 1;	/* getlock() erases the level files */
+}
+#endif
+
 void
 getlock()
 {
@@ -191,6 +238,11 @@ getlock()
 			goto gotlock;
 		(void) close(fd);
 
+#ifdef __EMSCRIPTEN__
+		/* a closed tab left it: recover silently, else start afresh */
+		(void) web_recover();
+		if (eraseoldlocks()) goto gotlock;
+#endif
 		if(iflags.window_inited) {
 		    c = yn("There is already a game in progress under your name.  Destroy old game?");
 		} else {
