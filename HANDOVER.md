@@ -158,3 +158,37 @@
 - Open: Enter menu has no movement rows (hh "Move commands" block skipped);
   item prompts with `-`/`,`/`.` still start as a letter prompt.
 - Next: stage 4 (tiles).
+
+### Stage 4 (tiles) — done 2026-09-26
+- Tile set: SLASH'EM's own 16×16 tiles (`win/share/{monsters,objects,other}.txt`,
+  1404 tiles) → `web/mktiles.py` → `dist/tiles.png` (40 per row). Only this
+  set; no mixing, no fallback needed.
+- Mapping (C decides): `util/tilemap` → `src/tile.c` (`glyph2tile[]`,
+  `substitute_tiles()` for mines/hell/knox/sokoban walls, called from
+  `goto_level()`/restore); `o_init.c` `shuffle_tiles()` gives flavoured
+  objects their appearance tile. `win/web/winweb.c` `redraw()` sends
+  `glyph2tile[glyph]` per cell, `-1` for never-printed cells (blank).
+- Loader: `web/slashem.js` `draw()` (canvas backing store = CSS size × dpr,
+  `imageSmoothingEnabled = false` after every resize, so no CSS scaling);
+  menu/inventory tiles are 16px `.ti` spans with `image-rendering: pixelated`.
+  No pref files. Scale: cell 12–64 px (fit + Zoom ±).
+- Checked (local server, own tab, wizard mode via a temporary `-D` hack in
+  `unixmain.c` + dist args, both reverted and rebuilt): canvas pixels of the
+  hero tile at cell 12 and 24 (dpr 2) use only the tile's own 6 colours
+  (nearest-neighbour, no blending); hero = role tile (wizard, priestess),
+  pet = kitten tile; rings/potions/wands/gems in inventory = appearance
+  tile (steel, pearl, muddy, pink, puce, engagement, bamboo, black — checked
+  against Discoveries); unexplored = blank, no stone tile; dark room
+  interiors blank after ^F (3.4.3 has no dark-floor glyph); doors, doorways,
+  corridors; Minetown (^V minetn) uses the mines wall tiles 1360–1370;
+  inventory tiles at font height, text windows in the normal font.
+- Statues and figurines use the generic statue/figurine object tiles: 3.4.3
+  has no per-monster statue glyphs or tiles (what the game has; not faked).
+- No code changes were needed.
+- Open: pets have no marker in tiles mode (tty hilites them; the tile set has
+  no pet overlay). Traps, `I` (remembered invisible) and Sokoban/Gehennom/
+  Knox walls were checked only in `src/tile.c`, not seen in play.
+  Wizard `-D` is unreachable on the web (emscripten `getpwuid` never matches
+  `WIZARD`), fine for players, awkward for testing.
+- Next: stage 5 web page: window layout, persistence, autosave/recovery
+  (stage 1 note), Help button (`help.html`), deploy prep.
