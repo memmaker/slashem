@@ -44,8 +44,8 @@ emcc -O2 $EMFLAGS -w -Wno-implicit-int -Wno-implicit-function-declaration -Wno-i
 	-sFORCE_FILESYSTEM -lidbfs.js -sENVIRONMENT=web
 rm -rf "$SEED"
 python3 web/mktiles.py win/share "$OUT/tiles.png"
-cp web/index.html web/slashem.js "$HOME/Games/rvip-tools/web/rvip-wm.js" \
-	"$HOME/Games/rvip-tools/web/rvip-sound.js" "$OUT/"
+cp web/index.html web/slashem.js \
+	 "$OUT/"
 python3 web/mksounds.py "$OUT/sound"      # synthesized effects + town loop (CC0)
 python3 web/make-help.py > "$OUT/help.html"
 ls -la "$OUT"
