@@ -62,10 +62,6 @@
 				var t = cells[y * COLNO + x];
 				if (t >= 0) ctx.drawImage(sheet, (t % perRow) * 16, Math.floor(t / perRow) * 16, 16, 16, x * cell, y * cell, cell, cell);
 			}
-		if (hero.x) {
-			ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
-			ctx.strokeRect(hero.x * cell + 0.5, hero.y * cell + 0.5, cell - 1, cell - 1);
-		}
 	}
 	/* keep the hero in the middle half of the map window; recentre when it leaves it */
 	function scrollMap() {
@@ -131,7 +127,7 @@
 		});
 		wm.apply();
 	}
-	function showMode() { $('btn-tiles').textContent = L.text ? 'Tiles: Text' : 'Tiles: SLASH\'EM'; }
+	function showMode() { $('btn-tiles').textContent = L.text ? 'Tiles: None' : 'Tiles: SLASH\'EM'; }
 	/* ---------- sound (RVIP 6b): C names the effect (win/web/websound.c), off by default ---------- */
 	var song = null, town = false;
 	function showAudio() {
@@ -148,6 +144,11 @@
 		cell = Math.max(12, Math.min(64, cell + d));
 		L.cell = cell; saveLayout();
 		measure(); scrollMap(true); draw();
+	}
+
+	/* inventory and pop-up again from the game's last rows (tile set changed) */
+	function relist() {
+		[2, 3].forEach(function (id) { var t = nh.last[id]; if (t != null) { nh.last[id] = null; nh.text(id, t); } });
 	}
 
 	var nh = {
@@ -345,7 +346,7 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		cv = document.querySelector('#map canvas');
 		ctx = cv.getContext('2d');
-		sheet.onload = function () { perRow = sheet.width / 16; draw(); };
+		sheet.onload = function () { perRow = sheet.width / 16; draw(); relist(); };
 		sheet.src = 'tiles.png';
 		cv.addEventListener('mousedown', onMapClick);
 		cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -359,9 +360,7 @@
 		$('btn-new').onclick = newGame;
 		$('btn-help').onclick = toggleHelp;
 		$('help-close').onclick = toggleHelp;
-		$('btn-tiles').onclick = function () { L.text = !L.text; showMode(); saveLayout(); draw();
-			[2, 3].forEach(function (id) { var t = nh.last[id]; if (t != null) { nh.last[id] = null; nh.text(id, t); } });
-		};
+		$('btn-tiles').onclick = function () { L.text = !L.text; showMode(); saveLayout(); draw(); relist(); };
 		$('btn-sound').onclick = function () { toggleAudio('sound'); };
 		$('btn-music').onclick = function () { toggleAudio('music'); };
 		$('btn-zoom-in').onclick = function () { zoom(4); };
