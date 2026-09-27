@@ -119,10 +119,10 @@
 			wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Log messages' }, { id: 'stat', title: 'Status' }, { id: 'inv', title: 'Inventory' }],
 			multi: { d: 'h', r: 0.75, a: { d: 'v', r: 0.2, a: 'msg', b: { d: 'v', r: 0.84, a: 'map', b: 'stat' } }, b: 'inv' },
 			single: { d: 'v', r: 3 * line / H, a: 'msg', b: { d: 'v', r: 1 - 3 * line / (H - 3 * line), a: 'map', b: 'stat' } },
-			state: L.wm, noFont: 'map',
+			state: L.wm,
 			save: function (st) { L.wm = st; saveLayout(); },
 			layout: function (r) { rects = r; fonts(); if (auto) { cell = fit(); measure(); } scrollMap(true); draw(); },
-			font: function (id, d) { L.font = Math.max(8, Math.min(28, L.font + d)); fonts(); saveLayout(); },
+			font: function (id, d) { if (id === 'map') { zoom(4 * d); return; } L.font = Math.max(8, Math.min(28, L.font + d)); fonts(); saveLayout(); },
 			onReset: function () { auto = true; L.cell = 0; L.font = 13; L.wm = wm.state(); fonts(); cell = fit(); measure(); scrollMap(true); draw(); saveLayout(); }
 		});
 		wm.apply();
@@ -363,8 +363,6 @@
 		$('btn-tiles').onclick = function () { L.text = !L.text; showMode(); saveLayout(); draw(); relist(); };
 		$('btn-sound').onclick = function () { toggleAudio('sound'); };
 		$('btn-music').onclick = function () { toggleAudio('music'); };
-		$('btn-zoom-in').onclick = function () { zoom(4); };
-		$('btn-zoom-out').onclick = function () { zoom(-4); };
 		$('btn-restart').onclick = function () { location.reload(); };
 		document.querySelectorAll('button').forEach(function (b) {
 			b.addEventListener('mousedown', function (e) { e.preventDefault(); });
