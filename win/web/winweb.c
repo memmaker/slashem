@@ -568,7 +568,11 @@ web_get_nh_event(void)
         rvip_keyhit = TRUE;
         nomul(0);
     }
-    if (emscripten_get_now() - last > 50) { /* let the page paint */
+    if (rvip_walking() && !rvip_keyhit) { /* explore: paint every step */
+        last = emscripten_get_now();
+        redraw();
+        emscripten_sleep(40);
+    } else if (emscripten_get_now() - last > 50) { /* let the page paint */
         last = emscripten_get_now();
         redraw();
         emscripten_sleep(0);

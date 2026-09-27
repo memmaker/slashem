@@ -2937,6 +2937,13 @@ int mode;
 	return (boolean) (r > 0);
 }
 
+/* TRUE while explore or a stair walk is under way (the web port paces it) */
+boolean
+rvip_walking()
+{
+	return rvip_mode != 0;
+}
+
 /* called from moveloop when idle; TRUE if it used the turn */
 boolean
 rvip_continue()
