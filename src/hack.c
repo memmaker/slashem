@@ -2941,8 +2941,6 @@ int mode;
 boolean
 rvip_continue()
 {
-	char m = rvip_mode;
-
 	if (rvip_reopen) {
 	    rvip_reopen = FALSE;
 	    if (!rvip_hostile_in_view()) {
@@ -2950,7 +2948,7 @@ rvip_continue()
 		return TRUE;
 	    }
 	}
-	if (!m)
+	if (!rvip_mode)
 	    return FALSE;
 	if (rvip_keyhit || strcmp(rvip_msg, toplines)
 	    || rvip_hostile_in_view() || u.uinwater || multi) {
@@ -2962,10 +2960,9 @@ rvip_continue()
 	    Strcpy(rvip_msg, toplines);
 	    if (!flags.move) rvip_mode = 0;
 	    return TRUE;
-	case -1:
+	case -1:	/* arrived: the player presses < or > again to take them */
 	    rvip_mode = 0;
-	    if (!(m == '>' ? dodown() : doup())) flags.move = 0;
-	    return TRUE;
+	    return FALSE;
 	default:
 	    rvip_mode = 0;
 	    return FALSE;
