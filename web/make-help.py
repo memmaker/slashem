@@ -23,7 +23,7 @@ kbd = docs.kbd
 esc = html.escape
 
 WEB = '''<ul>
-<li>The map is drawn with SLASH'EM's own 16×16 tiles. <em>Zoom −</em> / <em>Zoom +</em> change the tile size, <em>Tiles</em> switches to the game's characters; <em>Windows</em> hides, shows and rearranges the windows (drag a title bar, drag the gaps).</li>
+<li>The map is drawn with SLASH'EM's own 16×16 tiles. <em>A−</em> / <em>A+</em> on the Map title bar (shown on hover) change the tile size, <em>Tiles</em> switches to the game's characters; <em>Windows</em> hides, shows and rearranges the windows (drag a title bar, drag the gaps).</li>
 <li><strong>Keys:</strong> <kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd><kbd>y</kbd><kbd>u</kbd><kbd>b</kbd><kbd>n</kbd> or the arrow keys move you (Home, PgUp, End, PgDn for the diagonals); capital letters run. Alt+letter gives the M- commands. Click the map to travel there; click a menu row to pick it.</li>
 <li><em>Sound</em> and <em>Music</em> in the top bar are off at first: Sound plays short effects (hits, misses, doors, "You hear", stairs, level up), Music a town tune in Minetown and in shops. The choice is remembered.</li>
 <li>Browsers keep a few shortcuts for themselves (<kbd>Ctrl+W</kbd>, <kbd>Ctrl+T</kbd>, <kbd>Ctrl+N</kbd>, and <kbd>Cmd</kbd> shortcuts on a Mac), so those never reach the game.</li>
