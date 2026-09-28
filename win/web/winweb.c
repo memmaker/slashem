@@ -5,7 +5,8 @@
  *            text (char | colour << 8, the game's own), hero, level
  *   js_text: 0 prompt, 1 status lines, 2 inventory, 3 pop-up, 4 new
  *            message, 5 messages so far are old, 6 replace last message.
- *            Rows are tab-separated (tile, letter, sel, colour, text).
+ *            Rows are tab-separated (tile, letter, sel, colour, symbol,
+ *            text); symbol = the item's map char, shown in text mode.
  * Keys come from Module.nh.key(); Asyncify lets the game wait for them.
  * Modelled on ~/Games/nethack50/win/sdl2/winsdl.c + winweb.h. */
 
@@ -33,7 +34,7 @@ struct line { char *s; int attr, clr; };
 struct mitem {
     anything id;
     unsigned char ch, gch; /* unsigned: M- keys arrive as 0x80|c */
-    int attr, clr, tile;
+    int attr, clr, tile, sym; /* sym: the item's map symbol (text mode) */
     char *s;
     boolean sel;
 };
@@ -113,6 +114,18 @@ cidx(int attr, int clr)
 
 /* the game's own colour for a glyph (menus, inventory) */
 static int
+glyph_sym(int glyph)
+{
+    int ch, color;
+    unsigned special;
+
+    if (glyph == NO_GLYPH)
+        return 0;
+    mapglyph(glyph, &ch, &color, &special, 0, 0);
+    return ch & 0xff;
+}
+
+static int
 glyph_color(int glyph)
 {
     int ch, color;
@@ -152,13 +165,14 @@ redraw(void)
                              ? wins[WIN_STATUS].lines[i].s : "");
     js_text(1, tbuf);
 
-    /* rows: tile, letter, 0/1 selected or 2 heading, colour, text */
+    /* rows: tile, letter, 0/1 selected or 2 heading, colour, symbol
+       (char code, 0 none; shown instead of the tile in text mode), text */
     tlen = 0, tadd("%s", "");
     for (i = 0; i < nperm; i++)
-        tadd("%d\t%c\t%d\t%d\t%s\n", perm[i].tile,
+        tadd("%d\t%c\t%d\t%d\t%d\t%s\n", perm[i].tile,
              perm[i].ch ? perm[i].ch : ' ', perm[i].id.a_void ? 0 : 2,
              perm[i].id.a_void ? cidx(perm[i].attr, perm[i].clr) : CLR_YELLOW,
-             perm[i].s);
+             perm[i].sym, perm[i].s);
     js_text(2, tbuf);
 
     tlen = 0, tadd("%s", "");
@@ -171,11 +185,12 @@ redraw(void)
             if (w->nitems) {
                 struct mitem *m = &w->items[i];
 
-                tadd("%d\t%c\t%d\t%d\t%s\n", m->tile, m->ch ? m->ch : ' ',
+                tadd("%d\t%c\t%d\t%d\t%d\t%s\n", m->tile, m->ch ? m->ch : ' ',
                      m->id.a_void ? m->sel : 2,
-                     m->id.a_void ? cidx(m->attr, m->clr) : CLR_YELLOW, m->s);
+                     m->id.a_void ? cidx(m->attr, m->clr) : CLR_YELLOW,
+                     m->sym, m->s);
             } else
-                tadd("-1\t \t2\t%d\t%s\n",
+                tadd("-1\t \t2\t%d\t0\t%s\n",
                      cidx(w->lines[i].attr, w->lines[i].clr),
                      w->lines[i].s ? w->lines[i].s : "");
     }
@@ -568,7 +583,11 @@ web_get_nh_event(void)
         rvip_keyhit = TRUE;
         nomul(0);
     }
-    if (emscripten_get_now() - last > 50) { /* let the page paint */
+    if (rvip_walking() && !rvip_keyhit) { /* explore: paint every step */
+        last = emscripten_get_now();
+        redraw();
+        emscripten_sleep(40);
+    } else if (emscripten_get_now() - last > 50) { /* let the page paint */
         last = emscripten_get_now();
         redraw();
         emscripten_sleep(0);
@@ -772,6 +791,7 @@ web_add_menu(winid w, int glyph, const ANY_P *id, int ch, int gch, int attr,
     m->ch = ch, m->gch = gch, m->attr = attr;
     m->clr = glyph_color(glyph);
     m->tile = (glyph != NO_GLYPH) ? glyph2tile[glyph] : -1;
+    m->sym = glyph_sym(glyph);
     m->s = xstrdup(str);
     m->sel = preselected;
 }

@@ -791,6 +791,7 @@ E struct obj *rvip_obj;
 E boolean NDECL(rvip_hostile_in_view);
 E boolean FDECL(rvip_start, (int));
 E boolean NDECL(rvip_continue);
+E boolean NDECL(rvip_walking);
 E int NDECL(doexplore);
 #ifdef GOLDOBJ
 E long FDECL(money_cnt, (struct obj *));
