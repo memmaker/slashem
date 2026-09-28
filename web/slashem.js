@@ -270,6 +270,7 @@
 			if (!name) return 'A SLASH\'EM save file is named like 0Name (user number, then the character name).';
 			Module.FS.writeFile(SAVES + '/0' + name, data);
 		},
+		noSave: 'There is no saved game file: press S in the game first.',
 		helpText: 'Press ? in the game for its own help.'
 	});
 
