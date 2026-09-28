@@ -24,6 +24,7 @@
        WINTTYLIB=-lncurses GAMEUID=$(id -un) GAMEGRP=staff \
        GAMEDIR=$PWD/playground PREFIX=$PWD/install SHELLDIR=$PWD/install/bin all install
   ```
+  On Linux the native build also needs `CC=clang` and `-DLINUX` in CFLAGS.
   **No `-j`:** util's yacc rules race on `y.tab.c` (dgn_comp/lev_comp).
   `nroff`/`tbl` missing (Guidebook) and `rmdir ./-p` errors are harmless.
   Run: `cd playground && ./slashem -d $PWD -u <name>` (`TERM=vt100`).
